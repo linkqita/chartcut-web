@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>chartcut web - editor video 9:16</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>chartcut<span>web</span></h1>
+  <p class="tag">Rekaman layar landscape &rarr; video vertikal 9:16 siap upload. Semua diproses di browser kamu.</p>
+</header>
+
+<main>
+  <section class="panel" id="controls">
+
+    <div class="grp">
+      <label class="lbl">1. Video rekaman</label>
+      <input type="file" id="file" accept="video/*">
+      <div class="hint" id="fileinfo">Belum ada file.</div>
+    </div>
+
+    <div class="grp">
+      <label class="lbl">2. Hook (0 &ndash; N detik)</label>
+      <textarea id="hook" rows="2" placeholder="Stop pakai RSI buat entry gold.">Stop pakai RSI buat entry gold.</textarea>
+      <div class="row">
+        <label class="mini">Durasi hook (s) <input type="number" id="hookDur" value="2.5" step="0.5" min="0.5"></label>
+      </div>
+    </div>
+
+    <div class="grp">
+      <label class="lbl">3. Label konsep (muncul sesuai waktu)</label>
+      <div id="labels"></div>
+      <button class="btn ghost" id="addLabel" type="button">+ Tambah label</button>
+    </div>
+
+    <div class="grp">
+      <label class="lbl">4. Watermark</label>
+      <input type="text" id="brand" placeholder="@akunmu">
+    </div>
+
+    <div class="grp">
+      <label class="lbl">5. Kartu penutup (CTA)</label>
+      <input type="text" id="cta" value="SIMPAN VIDEO INI">
+      <div class="row">
+        <label class="mini">Durasi CTA (s) <input type="number" id="ctaDur" value="2" step="0.5" min="0.5"></label>
+      </div>
+    </div>
+
+    <div class="grp">
+      <label class="lbl">6. Caption (opsional, file .srt)</label>
+      <input type="file" id="srt" accept=".srt,.txt">
+      <div class="hint" id="srtinfo">Tanpa caption.</div>
+    </div>
+
+    <div class="grp">
+      <label class="lbl">7. Framing</label>
+      <div class="row">
+        <label class="mini">Zoom <input type="number" id="extra" value="1" step="0.05" min="1" max="3"></label>
+        <label class="mini">Kecepatan <input type="number" id="speed" value="1" step="0.25" min="0.25" max="4"></label>
+      </div>
+      <label class="mini full">Geser horizontal <input type="range" id="posX" min="0" max="1" step="0.01" value="0.5"></label>
+      <label class="mini full">Geser vertikal <input type="range" id="posY" min="0" max="1" step="0.01" value="0.5"></label>
+      <label class="chk"><input type="checkbox" id="pushin" checked> Push-in zoom halus</label>
+      <label class="mini full">Besar push-in <input type="range" id="pushinAmt" min="0" max="0.4" step="0.01" value="0.12"></label>
+    </div>
+
+    <div class="grp">
+      <label class="lbl">8. Output</label>
+      <div class="row">
+        <label class="mini">FPS <input type="number" id="fps" value="30" step="5" min="15" max="60"></label>
+        <label class="mini">Bitrate (Mbps) <input type="number" id="mbps" value="8" step="1" min="2" max="20"></label>
+      </div>
+      <label class="chk"><input type="checkbox" id="mute"> Buang audio asli</label>
+    </div>
+
+    <div class="grp actions">
+      <button class="btn" id="render" disabled>Render video</button>
+      <button class="btn ghost" id="reset" type="button">Reset setelan</button>
+    </div>
+  </section>
+
+  <section class="stage">
+    <div class="phone">
+      <canvas id="preview" width="540" height="960"></canvas>
+      <div class="ph-empty" id="phEmpty">Muat video dulu</div>
+    </div>
+    <div class="stagebar">
+      <div class="prog"><div class="progfill" id="progfill"></div></div>
+      <div class="status" id="status">Siap.</div>
+      <a class="btn dl hidden" id="dl" download="hasil_9x16.mp4">Unduh MP4</a>
+    </div>
+    <video id="video" playsinline crossorigin="anonymous"></video>
+  </section>
+</main>
+
+<footer>
+  <p>File tidak diunggah ke server. Semua render terjadi di perangkat kamu.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -402,7 +402,7 @@ if (Q.get('test')){
         const b = await (await fetch(url)).blob();
         S.file = new File([b], 'test.mp4', { type: b.type || 'video/mp4' });
       }catch(e){}
-      await new Promise(r => setTimeout(r, 1500));
+      for (let i = 0; i < 60 && !S.ready; i++) await new Promise(r => setTimeout(r, 250));
       syncPreview(); render();
     })();
   }

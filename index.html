@@ -49,8 +49,16 @@
     </div>
 
     <div class="grp">
-      <label class="lbl">6. Caption (opsional, file .srt)</label>
-      <input type="file" id="srt" accept=".srt,.txt">
+      <label class="lbl">6. Caption / Subtitle</label>
+      <div class="row" style="margin-bottom:8px;">
+        <button class="btn ghost" id="btnAutoSub" type="button" style="flex:2;background:#1b2130;border-color:#26a69a;color:#26a69a;">✨ Transkripsi Otomatis (Whisper)</button>
+        <select id="whisperModel" style="flex:1;background:#1b2130;color:#e6e9ef;border:1px solid #252b3a;border-radius:8px;padding:6px;">
+          <option value="onnx-community/whisper-tiny">Tiny (~39MB)</option>
+          <option value="onnx-community/whisper-base" selected>Base (~77MB)</option>
+        </select>
+      </div>
+      <div class="hint" id="subStatus">Atau unggah file .srt manual di bawah:</div>
+      <input type="file" id="srt" accept=".srt,.txt" style="margin-top:6px;">
       <div class="hint" id="srtinfo">Tanpa caption.</div>
     </div>
 
@@ -96,9 +104,9 @@
 </main>
 
 <footer>
-  <p>File tidak diunggah ke server. Semua render terjadi di perangkat kamu.</p>
+  <p>File tidak diunggah ke server. Semua render & transkripsi AI terjadi di perangkat kamu.</p>
 </footer>
 
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

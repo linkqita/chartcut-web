@@ -1,5 +1,8 @@
-/* chartcut web - render 9:16 di browser, tanpa server */
-(() => {
+/* chartcut web - render 9:16 + auto subtitle di browser */
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2';
+
+env.allowLocalModels = false;
+
 const $ = (s) => document.querySelector(s);
 const Q = new URLSearchParams(location.search);
 
@@ -13,7 +16,8 @@ const S = {
   labels: [], brand: '', cta: 'SIMPAN VIDEO INI', ctaDur: 2,
   srtCues: [], extra: 1, posX: 0.5, posY: 0.5,
   pushin: true, pushinAmt: 0.12, fps: 30, mbps: 8, mute: false, speed: 1,
-  ready: false, busy: false
+  ready: false, busy: false,
+  transcriber: null, transcriberModel: null
 };
 
 /* ---------- util ---------- */
@@ -154,9 +158,79 @@ function loadVideo(src, name){
   video.onerror = () => { $('#fileinfo').textContent = 'Gagal memuat video.'; };
 }
 
+/* ---------- Auto Subtitle (Whisper) ---------- */
+async function autoTranscribe() {
+  if (!S.file && !S.url) {
+    alert('Unggah video terlebih dahulu!');
+    return;
+  }
+  const btn = $('#btnAutoSub');
+  const statusEl = $('#subStatus');
+  const modelName = $('#whisperModel').value;
+
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = '⏳ Mengunduh/memproses AI...';
+
+  try {
+    if (!S.transcriber || S.transcriberModel !== modelName) {
+      statusEl.textContent = 'Memuat model Whisper (' + modelName.split('/')[1] + ')...';
+      S.transcriber = await pipeline('automatic-speech-recognition', modelName, {
+        device: ('webgpu' in navigator) ? 'webgpu' : 'wasm',
+      });
+      S.transcriberModel = modelName;
+    }
+
+    statusEl.textContent = 'Mengambil sampel audio 16kHz...';
+    let buf;
+    if (S.file) {
+      buf = await S.file.arrayBuffer();
+    } else {
+      buf = await (await fetch(S.url)).arrayBuffer();
+    }
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    const audioBuffer = await audioCtx.decodeAudioData(buf);
+    const channelData = audioBuffer.getChannelData(0);
+
+    statusEl.textContent = 'Transkripsi berjalan... (bisa memakan waktu 1-3 menit)';
+    const out = await S.transcriber(channelData, {
+      language: 'indonesian',
+      task: 'transcribe',
+      return_timestamps: true,
+    });
+
+    const cues = [];
+    if (out && out.chunks) {
+      out.chunks.forEach(c => {
+        if (c.timestamp) {
+          cues.push({
+            start: c.timestamp[0] || 0,
+            end: c.timestamp[1] || (c.timestamp[0] + 2),
+            text: c.text.trim()
+          });
+        }
+      });
+    } else if (out && out.text) {
+      cues.push({ start: 0, end: video.duration || 10, text: out.text.trim() });
+    }
+
+    S.srtCues = cues;
+    $('#srtinfo').textContent = '✨ ' + cues.length + ' kalimat transkripsi otomatis siap!';
+    statusEl.textContent = 'Selesai transkripsi otomatis!';
+  } catch (err) {
+    statusEl.textContent = 'Gagal transkripsi: ' + (err.message || err);
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
 /* ---------- render (WebCodecs, deterministik) ---------- */
 function setStatus(t){ $('#status').textContent = t; }
 function setProg(p){ $('#progfill').style.width = Math.max(0, Math.min(1, p))*100 + '%'; }
+
 async function pickVideoCodec(w, h, fps, bitrate){
   const cands = ['avc1.640033','avc1.4D0033','avc1.42002A','avc1.4D002A','avc1.420028','avc1.42E033','vp09.00.10.08'];
   for (const c of cands){
@@ -214,8 +288,6 @@ async function render(){
     cvs.width = W; cvs.height = H;
     const ctx = cvs.getContext('2d', { alpha:false });
 
-    /* audio dulu, supaya konfigurasi muxer lengkap sejak awal */
-    setStatus('Menyiapkan audio...');
     let audio = null;
     if (S.mute) setStatus('Audio dibuang sesuai setelan.');
     else if (!S.file) setStatus('Audio dilewati (sumber bukan berkas lokal).');
@@ -348,6 +420,8 @@ $('#file').addEventListener('change', (e) => {
   loadVideo(URL.createObjectURL(f), f.name);
 });
 
+$('#btnAutoSub').addEventListener('click', autoTranscribe);
+
 $('#srt').addEventListener('change', async (e) => {
   const f = e.target.files[0]; if (!f) return;
   S.srtCues = parseSRT(await f.text());
@@ -407,4 +481,3 @@ if (Q.get('test')){
     })();
   }
 }
-})();
